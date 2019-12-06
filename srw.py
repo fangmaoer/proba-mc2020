@@ -1,4 +1,4 @@
-"""Plot a random walk animation"""
+"""Plot a simple 2D random walk animation"""
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
