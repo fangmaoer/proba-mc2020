@@ -10,45 +10,45 @@ np.random.seed(19680801)
 def generate_walk(nstep: int):
     """
     Create a nstep-random walk path on Cartesian grid
-    walk is a (2, nstep) array with:
-        - first dimension: (x, y) coordinates
-        - second dimension: step index
     """
-    walk = np.empty((2, nstep))
+    x = np.empty(nstep)
+    y = np.empty(nstep)
 
     # initial position
-    walk[:, 0] = np.array((0, 0))
+    x[0] = 0
+    y[0] = 0
 
     # four possible directions
     directions = ((0, 1), (1, 0), (-1, 0), (0, -1))
 
     # time loop
-    for istep in range(1, nstep):
-        step = directions[np.random.randint(4)]
-        walk[:, istep] = walk[:, istep - 1] + step
-    return walk
+    for step in range(1, nstep):
+        direction = directions[np.random.randint(4)]
+        x[step] = x[step - 1] + direction[0]
+        y[step] = y[step - 1] + direction[1]
+    return x, y
 
 
 def generate_animation(nstep: int = 50):
     """return a nstep-random walk animation"""
 
-    def update_path(istep: int):
+    def update_path(step: int):
         """
-        Update line date with current time step (istep)
+        Update line and spot data with current step (step index)
         """
         # plot all edges from start to current position
-        path.set_data(walk[:, :istep+1])
+        path.set_data(x[:step + 1], y[:step + 1])
         # plot only current position
-        spot.set_data(walk[:, istep])
+        spot.set_data(x[step], y[step])
 
-    walk = generate_walk(nstep)
+    x, y = generate_walk(nstep)
 
     # Create figure and plot area
     fig, ax = plt.subplots()
     # a continuous line to draw walk path
-    path, = ax.plot(walk[0], walk[1])
+    path, = ax.plot(x, y)
     # a round-symbol spot to show current position
-    spot, = ax.plot(walk[0, 0], walk[1, 0], 'o')
+    spot, = ax.plot(x[0], y[0], 'o')
 
     ax.set_xlabel('$x$')
     ax.set_ylabel('$y$')
