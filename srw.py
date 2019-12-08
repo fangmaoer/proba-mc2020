@@ -32,6 +32,18 @@ def generate_walk(nstep: int):
     return x, y
 
 
+def create_figure(nstep: int):
+    """Return a figure and plot area for a nstep-walk"""
+    # Create figure and plot area
+    fig, ax = plt.subplots()
+    ax.set_xlabel('$x$')
+    ax.set_ylabel('$y$')
+    ax.set_title(f'{nstep}-nstep random walk')
+    ax.set_aspect('equal', 'datalim')
+    ax.grid(True)
+    return fig, ax
+
+
 def generate_animation(nstep: int = 50):
     """return a nstep-random walk animation"""
 
@@ -46,18 +58,13 @@ def generate_animation(nstep: int = 50):
 
     x, y = generate_walk(nstep)
 
-    # Create figure and plot area
-    fig, ax = plt.subplots()
-    # a continuous line to draw walk path
-    path, = ax.plot(x, y)
-    # a round-symbol spot to show current position
-    spot, = ax.plot(x[0], y[0], 'o')
+    # create figure and plot area
+    fig, ax = create_figure(nstep)
 
-    ax.set_xlabel('$x$')
-    ax.set_ylabel('$y$')
-    ax.set_title(f'{nstep}-nstep random walk')
-    ax.set_aspect('equal', 'datalim')
-    ax.grid(True)
+    # plot a continuous line for walk path
+    path, = ax.plot(x, y)
+    # plot a round-symbol spot for current position
+    spot, = ax.plot(x[0], y[0], 'o')
 
     anim = animation.FuncAnimation(fig,
                                    func=update_path,
@@ -67,6 +74,18 @@ def generate_animation(nstep: int = 50):
                                    repeat=False)
 
     return anim
+
+
+def plot_walk(nstep):
+    """Plot a nstep-random walk in a figure"""
+    x, y = generate_walk(nstep)
+    fig, ax = create_figure(nstep)
+    
+    path, = ax.plot(x, y)  # a line for path
+
+    # symbols for initial (squared) and final (round) position
+    starting_point, = ax.plot(x[0], y[0], 's', color=path.get_color())
+    ending_point, = ax.plot(x[-1], y[-1], 'o')
 
 
 if __name__ == '__main__':
