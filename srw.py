@@ -1,4 +1,4 @@
-"""Plot a simple 2D random walk animation"""
+"""Create a simple 2D random walk animation"""
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -19,7 +19,10 @@ def generate_walk(nstep: int):
     y[0] = 0
 
     # four possible directions
-    directions = ((0, 1), (1, 0), (-1, 0), (0, -1))
+    directions = ((0, 1),   # North
+                  (1, 0),   # East
+                  (-1, 0),  # West
+                  (0, -1))  # South
 
     # time loop
     for step in range(1, nstep):
