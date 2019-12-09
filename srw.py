@@ -38,7 +38,7 @@ def create_figure(nstep: int):
     fig, ax = plt.subplots()
     ax.set_xlabel('$x$')
     ax.set_ylabel('$y$')
-    ax.set_title(f'{nstep}-nstep random walk')
+    ax.set_title(f'{nstep}-step random walk')
     ax.set_aspect('equal', 'datalim')
     ax.grid(True)
     return fig, ax
