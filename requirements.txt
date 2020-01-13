@@ -3,3 +3,6 @@ matplotlib
 ffmpeg
 jupyter
 ipywidgets
+seaborn
+sklearn
+numba
