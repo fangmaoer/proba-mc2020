@@ -2,9 +2,16 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+from math import sqrt, pi
 
 # Fixing random state for reproducibility
 np.random.seed(19680801)
+
+# four possible directions
+directions = ((0, 1),   # North
+              (1, 0),   # East
+              (-1, 0),  # West
+              (0, -1))  # South
 
 
 def generate_walk(nstep: int):
@@ -18,12 +25,6 @@ def generate_walk(nstep: int):
     x[0] = 0
     y[0] = 0
 
-    # four possible directions
-    directions = ((0, 1),   # North
-                  (1, 0),   # East
-                  (-1, 0),  # West
-                  (0, -1))  # South
-
     # time loop
     for step in range(1, nstep):
         direction = directions[np.random.randint(4)]
@@ -32,7 +33,27 @@ def generate_walk(nstep: int):
     return x, y
 
 
-def create_figure(nstep: int):
+def compute_distance(nstep: int):
+    x = y = 0
+    dir = np.random.randint(4, size=nstep)
+    for step in range(nstep):
+        dx, dy = directions[np.random.randint(4)]
+        x += dx
+        y += dy
+    return sqrt(x**2 + y**2)
+
+
+def create_1Dfigure():
+    """Return a figure and plot area for a nstep-walk"""
+    # Create figure and plot area
+    fig, ax = plt.subplots()
+    ax.set_xlabel('$n$')
+    ax.set_ylabel('$d$')
+    ax.set_title('Distance as function of number of steps $n$')
+    return fig, ax
+
+
+def create_2Dfigure(nstep: int):
     """Return a figure and plot area for a nstep-walk"""
     # Create figure and plot area
     fig, ax = plt.subplots()
@@ -59,7 +80,7 @@ def generate_animation(nstep: int = 50):
     x, y = generate_walk(nstep)
 
     # create figure and plot area
-    fig, ax = create_figure(nstep)
+    fig, ax = create_2Dfigure(nstep)
 
     # plot a continuous line for walk path
     path, = ax.plot(x, y)
@@ -76,11 +97,11 @@ def generate_animation(nstep: int = 50):
     return anim
 
 
-def plot_walk(nstep):
+def plot_walk(nstep: int):
     """Plot a nstep-random walk in a figure"""
     x, y = generate_walk(nstep)
-    fig, ax = create_figure(nstep)
-    
+    fig, ax = create_2Dfigure(nstep)
+
     path, = ax.plot(x, y)  # a line for path
 
     # symbols for initial (squared) and final (round) position
@@ -88,6 +109,35 @@ def plot_walk(nstep):
     ending_point, = ax.plot(x[-1], y[-1], 'o')
 
 
+def plot_distance(nwalk: int = 1000):
+    """
+    Plot mean distance from starting point as function of number of steps
+    """
+
+    def compute_distances(nwalk: int):
+        """
+        return a mean over nwalk samples of the distance for various nsteps
+        """
+        dist = np.empty_like(nsteps, dtype=float)
+        for istep, nstep in np.ndenumerate(nsteps):
+            # Mean over nwalk realizations
+            sum = 0.
+            for iwalk in range(nwalk):
+                sum += compute_distance(nstep)
+            dist[istep] = sum / nwalk
+        return dist
+
+    nsteps = np.arange(0, 1000, 100)
+
+    fig, ax = create_1Dfigure()
+
+    ax.plot(nsteps, np.sqrt(2 * nsteps / pi), label=r'$\sqrt{\frac{2n}{\pi}}$')
+    ax.plot(nsteps, compute_distances(nwalk), '+',
+            label=f'Average over {nwalk} samples')
+    ax.legend()
+
+
 if __name__ == '__main__':
-    anim = generate_animation(100)
+    # anim = generate_animation(100)
+    plot_distance(500)
     plt.show()
