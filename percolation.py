@@ -1,7 +1,6 @@
 # simulate Percolations on different graphs
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 from math import sqrt, pi
 
 # Fixing random state for reproducibility
@@ -16,14 +15,14 @@ from math import sqrt, pi
 # x[i,j,0],  the up one (i,j)--(i,j+1) is recorded in x[i,j,1].
 
 
-def sample_unif_x(w, h):
+def sample_unif_x(w: int, h: int) -> np.ndarray:
     return np.random.random((w + 1, h + 1, 2))
 
 # the function compute_spin take an array x and a value 0<p<1, compute
 # another binary array spin, spin[i]=0 means that edge i is empty
 
 
-def lessthan(x, p):
+def lessthan(x: float, p: float) -> int:
     if x < p:
         return 0
     else:
@@ -36,7 +35,7 @@ vlessthan = np.vectorize(lessthan)
 # array value 0 if coordinate is less than p and value 1 otherwise.
 
 
-def compute_spin(x, p: float):
+def compute_spin(x: np.ndarray, p: float) -> np.ndarray:
     return vlessthan(x, p)
 
 # This function will give a percolation sample in a rectangle of height h,
@@ -48,80 +47,126 @@ def compute_spin(x, p: float):
 # as the horizontals.
 
 
-def simu_perco_square(w, h, p):
+def simu_perco_square(w: int, h: int, p: float) -> np.ndarray:
+    """
+    compute the clusters of a percolation sample x of width w
+    and height h, on the square lattice,
+    return a list cluster[i,j]=k where
+    k indicate to which cluster the site (i,j) belongs to.
+    """
     return compute_spin(sample_unif_x(w, h), p)
 
-# this function compute the clusters of a percolation sample x of width w
-# and height h, on the square lattice, return a list cluster[i,j]=k where
-# k indicate to which cluster the site (i,j) belongs to.
 
+def find_all_cluster(x: np.ndarray, w: int, h: int) -> np.array:
+    """
+    order the vertices by order(i,j)=i+1+(w+1)j, that is left to right,
+    bottom to top. the variable order record the next unvisited vertex
+    """
 
-def find_all_cluster(x, w, h):
-    # order the vertices by order(i,j)=i+1+(w+1)j, that is left to right,
-    # bottom to top. the variable order record the next unvisited vertex
-
-    cluster = np.full((w + 1, h + 1), 0)
-    visited = np.full((w + 1, h + 1), 0)
-    k = 0
+    cluster = np.zeros((w + 1, h + 1), dtype=int)
+    visited = np.full((w + 1, h + 1), False)
+    k = 0  # cluster index
     myvertex = 1
+    stack = []
     # as long as we havent treated the last myvertex, continue
-    while myvertex < (w + 1)(h + 1):
-        # set the cluster to ++1
-        k = k + 1
+    while myvertex < (w + 1) * (h + 1):
         # put the next site in myvertex in to the stack if the site is
         # unvisited, otherwise myvertex ++
-        if visited[[(myvertex - 1) % (w + 1), (myvertex - 1) // (w + 1)]] == 0:
-            stack.append([(myvertex - 1) % (w + 1), (myvertex - 1) // (w + 1)])
+        iv = (myvertex - 1) % (w + 1)
+        jv = (myvertex - 1) // (w + 1)
+        if not visited[iv, jv]:
+            stack.append([iv, jv])
+            k += 1  # increment cluster index
         else:
-            myvertex = myvertex + 1
-        while stack != []:
+            myvertex += 1
+
+        while stack:
             # pop the current myvertex from the stack and set its cluster label
             # to k and mark as visited
-            current = stack.pop(0)
-            cluster[current[0], current[1]] = k
-            visited[current[0], current[1]] = 1
-            # check all of its 4 neighbors, if neighbor is unvisited and connected to current site, then set its cluster label to k and marked visited and push this site into stack, otherwise do nothing
+            i, j = stack.pop(0)
+            cluster[i, j] = k
+            visited[i, j] = True
+            # check all of its 4 neighbors, if neighbor is unvisited and
+            # connected to current site,
+            # then set its cluster label to k and marked visited and
+            # push this site into stack, otherwise do nothing
             # check the left neighbor, first coordinate must >0 to have a left
             # neighbor
-            if current[0] > 0:
-                if visited[current[0] -
-                           1, current[1]] == 0 and x[current[0] -
-                                                     1, current[1], 0] == 1:
-                    cluster[current[0] - 1, current[1]] = k
-                    visited[current[0] - 1, current[1]] = 1
-                    stack.push[[current[0] - 1, current[1]]]
+            if i > 0 and not visited[i - 1, j] and x[i - 1, j, 0] == 1:
+                cluster[i - 1, j] = k
+                visited[i - 1, j] = True
+                stack.append([i - 1, j])
             # check the right neighbor, first coordinate must <w to have a
             # right neighbor
-            if current[0] < w:
-                if visited[current[0] +
-                           1, current[1]] == 0 and x[current[0] +
-                                                     1, current[1], 0] == 1:
-                    cluster[current[0] + 1, current[1]] = k
-                    visited[current[0] + 1, current[1]] = 1
-                    stack.push[[current[0] + 1, current[1]]]
+            if i < w and not visited[i + 1, j] and x[i, j, 0] == 1:
+                cluster[i + 1, j] = k
+                visited[i + 1, j] = True
+                stack.append([i + 1, j])
             # check the up neighbor, second coordinate must <h to have such a
             # neighbor
-            if current[1] < h:
-                if visited[current[0],
-                           current[1] + 1] == 0 and x[current[0],
-                                                      current[1] + 1,
-                                                      0] == 1:
-                    cluster[current[0], current[1] + 1] = k
-                    visited[current[0], current[1] + 1] = 1
-                    stack.push[[current[0], current[1] + 1]]
+            if j < h and not visited[i, j + 1] and x[i, j, 1] == 1:
+                cluster[i, j + 1] = k
+                visited[i, j + 1] = True
+                stack.append([i, j + 1])
             # check the down neighbor, second coordinate must >0
-            if current[1] > 0:
-                if visited[current[0],
-                           current[1] - 1] == 0 and x[current[0],
-                                                      current[1] - 1,
-                                                      0] == 1:
-                    cluster[current[0], current[1] - 1] = k
-                    visited[current[0], current[1] - 1] = 1
-                    stack.push[[current[0], current[1] - 1]]
+            if j > 0 and not visited[i, j - 1] and x[i, j - 1, 1] == 1:
+                cluster[i, j - 1] = k
+                visited[i, j - 1] = True
+                stack.append([i, j - 1])
+
     return cluster
 
 
-sample = simu_perco_square(3, 2, 0.5)
-print(sample)
-print(find_all_cluster(sample, 3, 2))
-# print(sq_perco_find_largest_cluster(sample,3,2))
+def get_largest_cluster(cluster: np.ndarray) -> tuple:
+    """Return index and size of largest cluster"""
+    counts = np.bincount(cluster.reshape(-1))
+    largest_cluster = np.argmax(counts)
+    largest_cluster_size = counts[largest_cluster]
+    return largest_cluster, largest_cluster_size
+
+
+def plot_figure(w, h, sample, cluster):
+    """Plot clusters"""
+
+    largest_cluster, largest_cluster_size = get_largest_cluster(cluster)
+
+    # Compute space steps
+    dw = 1. / w
+    dh = 1. / h
+    fig, ax = plt.subplots()
+    ax.set_aspect('equal', 'datalim')
+    ax.set_title(f'{(w, h)} grid')
+    ax.grid(True)
+
+    for i in range(w + 1):
+        for j in range(h + 1):
+            # Plot horizontal edge
+            color = 'r' if cluster[i, j] == largest_cluster else 'b'
+            if i <= w - 1 and sample[i, j, 0] == 1:
+                ax.plot([i * dw, (i + 1) * dw], [j * dh, j * dh], color)
+            # Plot vertical edge
+            if j <= h - 1 and sample[i, j, 1] == 1:
+                ax.plot([i * dw, i * dw], [j * dh, (j + 1) * dh], color)
+    # Add text
+    plt.text(0.8, 1.,
+             s=f'{largest_cluster_size}-vertex cluster',
+             transform=ax.transAxes,
+             bbox={'boxstyle': 'square', 'ec': 'r', 'fc': 'w'})
+    plt.show()
+
+
+def compute_clusters(w, h, p=0.5):
+    """Compute clusters in a random (w, h)-grid"""
+    sample = simu_perco_square(w, h, p)
+    cluster = find_all_cluster(sample, w, h)
+
+    return sample, cluster
+
+
+def main(w, h):
+    sample, cluster = compute_clusters(w, h, p=0.5)
+    plot_figure(w, h, sample, cluster)
+
+
+if __name__ == '__main__':
+    main(22, 15)
