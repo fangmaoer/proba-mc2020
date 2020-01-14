@@ -147,10 +147,11 @@ def compute_clusters(w, h, p=0.5):
     return sample, cluster
 
 
-def main(w, h):
-    sample, cluster = compute_clusters(w, h, p=0.5)
+def main(w, h, p):
+    """Compute and plot clusters"""
+    sample, cluster = compute_clusters(w, h, p)
     plot_figure(w, h, sample, cluster)
 
 
 if __name__ == '__main__':
-    main(22, 15)
+    main(22, 15, p=0.5)
