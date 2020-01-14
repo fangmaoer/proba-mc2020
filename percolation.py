@@ -65,11 +65,13 @@ def find_all_cluster(x,w,h):
                     visited[current[0]+1,current[1]]=1
                     stack.push[[current[0]+1,current[1]]]
             # check the up neighbor, second coordinate must <h to have such a neighbor
+            if current[1]<h:
                 if visited[current[0],current[1]+1]==0 and x[current[0],current[1]+1,0]==1:
                     cluster[current[0],current[1]+1]=k
                     visited[current[0],current[1]+1]=1
                     stack.push[[current[0],current[1]+1]]
             # check the down neighbor, second coordinate must >0
+            if current[1]>0:
                 if visited[current[0],current[1]-1]==0 and x[current[0],current[1]-1,0]==1:
                     cluster[current[0],current[1]-1]=k
                     visited[current[0],current[1]-1]=1
@@ -80,6 +82,7 @@ sample=simu_perco_square(3,2,0.5)
 print(sample)
 print(find_all_cluster(sample,3,2))
 #print(sq_perco_find_largest_cluster(sample,3,2))
+
 
 
 
