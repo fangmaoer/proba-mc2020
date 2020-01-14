@@ -18,47 +18,32 @@ from math import sqrt, pi
 def sample_unif_x(w: int, h: int) -> np.ndarray:
     return np.random.random((w + 1, h + 1, 2))
 
-# the function compute_spin take an array x and a value 0<p<1, compute
-# another binary array spin, spin[i]=0 means that edge i is empty
-
-
-def lessthan(x: float, p: float) -> int:
-    if x < p:
-        return 0
-    else:
-        return 1
-
-
-# make the function able to do vectorized operation
-vlessthan = np.vectorize(lessthan)
-# this function take an array x and a 0<p<1, return the same dimensional
-# array value 0 if coordinate is less than p and value 1 otherwise.
-
 
 def compute_spin(x: np.ndarray, p: float) -> np.ndarray:
-    return vlessthan(x, p)
-
-# This function will give a percolation sample in a rectangle of height h,
-# width w, parameter p, the output is two array X[(h+1,w,0)], the
-# horizontal edges and X[(h,w+1,1)] the vertical edges. order the
-# horizontal edges by (i,j,0); i=1..w; j= 1..h+1; from the bottom left
-# corner, i coordinate go to the right and j coordinate go to the top.
-# order the vertical edges by (i,j,1); i=1..w+1; j=1..h, same coordinate
-# as the horizontals.
+    """Return a numpy array with 0 or 1 values"""
+    return np.where(x < p, 0, 1)
 
 
 def simu_perco_square(w: int, h: int, p: float) -> np.ndarray:
     """
-    compute the clusters of a percolation sample x of width w
-    and height h, on the square lattice,
-    return a list cluster[i,j]=k where
-    k indicate to which cluster the site (i,j) belongs to.
+    This function will give a percolation sample in a rectangle of height h,
+    width w, parameter p, the output is two array X[(h+1,w,0)], the
+    horizontal edges and X[(h,w+1,1)] the vertical edges. order the
+    horizontal edges by (i,j,0); i=1..w; j= 1..h+1; from the bottom left
+    corner, i coordinate go to the right and j coordinate go to the top.
+    order the vertical edges by (i,j,1); i=1..w+1; j=1..h, same coordinate
+    as the horizontals.
     """
     return compute_spin(sample_unif_x(w, h), p)
 
 
 def find_all_cluster(x: np.ndarray, w: int, h: int) -> np.array:
     """
+    compute the clusters of a percolation sample x of width w
+    and height h, on the square lattice,
+    return a list cluster[i,j]=k where
+    k indicate to which cluster the site (i,j) belongs to.
+    
     order the vertices by order(i,j)=i+1+(w+1)j, that is left to right,
     bottom to top. the variable order record the next unvisited vertex
     """
@@ -159,7 +144,6 @@ def compute_clusters(w, h, p=0.5):
     """Compute clusters in a random (w, h)-grid"""
     sample = simu_perco_square(w, h, p)
     cluster = find_all_cluster(sample, w, h)
-
     return sample, cluster
 
 
