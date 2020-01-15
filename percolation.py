@@ -1,4 +1,4 @@
-# simulate Percolations on different graphs
+"""simulate Percolations on different graphs"""
 import numpy as np
 import matplotlib.pyplot as plt
 from math import sqrt, pi
