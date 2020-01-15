@@ -120,9 +120,8 @@ class Percolation:
         h = self.h
         largest_cluster, largest_cluster_size = self.get_largest_cluster()
 
-        # Compute space steps
-        dw = 1. / w
-        dh = 1. / h
+        # Compute space step
+        dx = 1. / max(w, h)
 
         # Create figure
         fig, ax = plt.subplots()
@@ -137,10 +136,10 @@ class Percolation:
                 # Plot horizontal edge
                 color = 'r' if self.cluster[i, j] == largest_cluster else 'b'
                 if i <= w - 1 and self.sample[i, j, 0] == 1:
-                    ax.plot([i * dw, (i + 1) * dw], [j * dh, j * dh], color)
+                    ax.plot([i * dx, (i + 1) * dx], [j * dx, j * dx], color)
                 # Plot vertical edge
                 if j <= h - 1 and self.sample[i, j, 1] == 1:
-                    ax.plot([i * dw, i * dw], [j * dh, (j + 1) * dh], color)
+                    ax.plot([i * dx, i * dx], [j * dx, (j + 1) * dx], color)
         # Add text
         plt.text(0.8, 1.,
                  s=f'{largest_cluster_size}-vertex cluster',

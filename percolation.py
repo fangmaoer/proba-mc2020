@@ -115,9 +115,10 @@ def plot_figure(w, h, sample, cluster):
 
     largest_cluster, largest_cluster_size = get_largest_cluster(cluster)
 
-    # Compute space steps
-    dw = 1. / w
-    dh = 1. / h
+    # Compute space step
+    dx = 1. / max(w, h)
+
+    # Create figures
     fig, ax = plt.subplots()
     ax.set_aspect('equal', 'datalim')
     ax.set_title(f'{(w, h)} grid')
@@ -128,10 +129,10 @@ def plot_figure(w, h, sample, cluster):
             # Plot horizontal edge
             color = 'r' if cluster[i, j] == largest_cluster else 'b'
             if i <= w - 1 and sample[i, j, 0] == 1:
-                ax.plot([i * dw, (i + 1) * dw], [j * dh, j * dh], color)
+                ax.plot([i * dx, (i + 1) * dx], [j * dx, j * dx], color)
             # Plot vertical edge
             if j <= h - 1 and sample[i, j, 1] == 1:
-                ax.plot([i * dw, i * dw], [j * dh, (j + 1) * dh], color)
+                ax.plot([i * dx, i * dx], [j * dx, (j + 1) * dx], color)
     # Add text
     plt.text(0.8, 1.,
              s=f'{largest_cluster_size}-vertex cluster',
