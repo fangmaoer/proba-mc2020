@@ -156,3 +156,115 @@ def main(w, h, p):
 
 if __name__ == '__main__':
     main(22, 15, p=0.5)
+
+
+
+# The hexagonal lattice, percolation by cells, we take a w times h hexagonal lattice, label the hexagonal cells by its center, counts from left bottom, Cell centers are labeled (0,0) ... (h-1,w-1)
+def hex_sample_unif_x(w: int, h: int) -> np.ndarray:
+    return np.random.random((w , h))
+
+
+def compute_spin(x: np.ndarray, p: float) -> np.ndarray:
+    """Return a numpy array with 0 or 1 values"""
+    return np.where(x < p, 0, 1)
+
+
+def simu_perco_hex(w: int, h: int, p: float) -> np.ndarray:
+    """
+    This function will give a percolation sample in a hexagonal rectangle of height h,
+    width w, parameter p, the output is a array X[(w,h)] where X[i,j] is the sample uniform number at the cell (i,j).
+    """
+    return compute_spin(hex_sample_unif_x(w, h), p)
+
+def hex_find_all_cluster(x: np.ndarray, w: int, h: int) -> np.array:
+    """
+    compute the clusters of a percolation sample x of width w
+    and height h, on the hexagonal lattice,
+    return a list cluster[i,j]=k where
+    k indicate to which cluster the site (i,j) belongs to.
+    
+    order the vertices by order(i,j)=i+1+wj, that is left to right,
+    bottom to top. the variable myvertex record the next unvisited vertex
+    """
+
+    cluster = np.zeros((w, h), dtype=int)
+    visited = np.full((w, h), False)
+    k = 0  # cluster index
+    myvertex = 1
+    stack = []
+    # as long as we havent treated the last myvertex, continue
+    while myvertex < w * h:
+        # put the next site in myvertex in to the stack if the site is
+        # unvisited and its black, otherwise myvertex ++
+        iv = (myvertex - 1) % w
+        jv = (myvertex - 1) // w
+        if not visited[iv, jv] and x[iv, jv]==1:
+            stack.append([iv, jv])
+            k += 1  # increment cluster index
+        else:
+            myvertex += 1
+
+        while stack:
+            # pop the current myvertex from the stack and set its cluster label
+            # to k and mark as visited
+            i, j = stack.pop(0)
+            cluster[i, j] = k
+            visited[i, j] = True
+            # check all of its six neighbors, if neighbor is unvisited and
+            # connected to current site,
+            # then set its cluster label to k and marked visited and
+            # push this site into stack, otherwise do nothing
+            # check the 12clock neighbor
+            if j < h-1 and not visited[i, j+1] and x[i, j+1] == 1:
+                cluster[i, j+1] = k
+                visited[i, j+1] = True
+                stack.append([i, j+1])
+            # check the 2clock neighbor
+            if i < w-1 and not visited[i + 1, j] and x[i+1, j] == 1:
+                cluster[i + 1, j] = k
+                visited[i + 1, j] = True
+                stack.append([i + 1, j])
+            # check the 4clock neighbor
+            if i < w-1 and j > 0 and not visited[i + 1, j-1] and x[i+1, j-1] == 1:
+                cluster[i + 1, j-1] = k
+                visited[i + 1, j-1] = True
+                stack.append([i + 1, j-1])
+                # check the 6clock neighbor
+            if j > 0 and not visited[i, j-1] and x[i, j-1] == 1:
+                cluster[i, j-1] = k
+                visited[i, j-1] = True
+                stack.append([i, j-1])
+                # check the 8clock neighbor
+            if i > 0 and not visited[i - 1, j] and x[i - 1, j] == 1:
+                cluster[i - 1, j] = k
+                visited[i - 1, j] = True
+                stack.append([i - 1, j])
+                # check the 10clock neighbor
+            if i >0 and j < h-1 and not visited[i - 1, j+1] and x[i - 1, j+1] == 1:
+                cluster[i - 1, j+1] = k
+                visited[i - 1, j+1] = True
+                stack.append([i - 1, j+1])
+    return cluster
+
+
+def hex_get_largest_cluster(cluster: np.ndarray) -> tuple:
+    """Return index and size of largest cluster, except value 0"""
+    #counts = np.bincount(cluster.reshape(-1))
+    largest_cluster = np.partition(cluster.flatten(), -2)[-2]
+#    largest_cluster_size = counts[largest_cluster]
+    return largest_cluster#, largest_cluster_size
+
+
+
+# to plot the hexagons (i,j), the center is i*[sqrt[3]/2,1/2]+j*[0,1], radius sqrt[3]/3
+
+
+
+""" Monte Carlo for crossing probability"""
+# this function detect if there is a horizontal crossing for percolation on hexagonal lattice
+def is_crossed(x,w,h):
+    # if intersection fo the two array x[0,0..h-1] and x[w-1,0..h-1] is non empty that it is crossed, except that intersection is {0}
+    return
+
+def find_p_that_cross(x):
+    for p in [0.1, 0.5, 0.7, 0.9]:
