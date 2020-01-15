@@ -41,4 +41,4 @@ python srw.py
 ```
 
 Test within a Jupyter notebook using 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/git/https%3A%2F%2Fgitlab.math.unistra.fr%2Frandom-walk%2Fsrw/master?filepath=srw.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/git/https%3A%2F%2Fgitlab.math.unistra.fr%2Frandom-walk%2Fsrw/master?filepath=mc2020.ipynb)
