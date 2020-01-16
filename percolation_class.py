@@ -161,7 +161,6 @@ class PercolationRect:
                 if j <= h - 1 and self.sample[i, j, 1] == 1:
                     ax.plot([i * dx, i * dx], [j * dx, (j + 1) * dx], color)
         self.add_text(ax, f'{largest_cluster_size}-vertex cluster')
-        plt.show()
 
     def __repr__(self):
         """Return a string be output with print(self)"""
@@ -169,6 +168,14 @@ class PercolationRect:
         s += f'cluster:\n{self.cluster}\n'
         s += f'largest_cluster:\n{self.get_largest_cluster()}'
         return s
+
+    def is_crossed(self):
+        """Return True if percolation crosses from left to right boundary"""
+        left_boundary_clusters = np.extract(self.cluster[0] > 0,
+                                            self.cluster[0])
+        right_boundary_clusters = np.extract(self.cluster[-1] > 0,
+                                             self.cluster[-1])
+        return np.in1d(left_boundary_clusters, right_boundary_clusters).any()
 
 
 class PercolationHex(PercolationRect):
@@ -287,62 +294,59 @@ class PercolationHex(PercolationRect):
                 if add_cluster_id:
                     ax.text(x, y, self.cluster[i, j], ha='center', va='center')
 
-        self.add_text(ax, f'{largest_cluster_size}-cell cluster', color='lightcoral')
+        self.add_text(ax, f'{largest_cluster_size}-cell cluster',
+                      color='lightcoral')
         ax.autoscale()
-        plt.show()
-
-    def is_crossed(self):
-        """Return True if percolation crosses from left to right boundary"""
-        left_boundary_clusters = np.extract(self.cluster[0] > 0,
-                                            self.cluster[0])
-        right_boundary_clusters = np.extract(self.cluster[-1] > 0,
-                                             self.cluster[-1])
-        return np.in1d(left_boundary_clusters, right_boundary_clusters).any()
 
 
-def percolation_vs_p(w: int, h: int, nsim=40):
+def percolation_vs_p(w: int, h: int, nsim=40, n_p=40):
     """
     Plot the probability of crossing as a function of p
     by running nsim simulations
     """
+    p = np.linspace(0., 1., n_p)  # 40-value array between 0 and 1
 
-    def crossing_probability(p):
+    def crossing_probability(Percolation, p: float):
         """Return a probability of crossing"""
         sum = 0
         for i in range(nsim):
-            percohex = PercolationHex(w, h, p)
-            percohex.compute_clusters()
-            if percohex.is_crossed():
+            perco = Percolation(w, h, p)
+            perco.compute_clusters()
+            if perco.is_crossed():
                 sum += 1
         return sum / nsim
 
-    p = np.linspace(0., 1., 40)  # 40-value array between 0 and 1
-    crosses = np.zeros_like(p)
-    for i in range(len(p)):
-        crosses[i] = crossing_probability(p[i])
+    def get_crossing_probabilities(Percolation):
+        """
+        Return a n_p array of crossing probability for given Percolation type
+        """
+        print(f"Computing crossing probabilities for {Percolation.grid_type} "
+              "percolation")
+        crossing_prob = np.zeros_like(p)
+        for i in range(len(p)):
+            crossing_prob[i] = crossing_probability(Percolation, p[i])
+        return crossing_prob
+
+    crossing_prob_rect = get_crossing_probabilities(PercolationRect)
+    crossing_prob_hex = get_crossing_probabilities(PercolationHex)
 
     fig, ax = plt.subplots()
     fig.suptitle('Probability of crossing as a function of $p$')
     ax.set_xlabel('$p$')
+    ax.set_ylabel('probability')
     ax.grid()
-    # plt.bar(p, crosses, 0.04)
-    plt.plot(p, crosses, '-o')
-    box_text = f"""\
-{nsim} simulations
-on a {w} x {h} hexagonal grid"""
-    plt.text(0.55, 0.85,
-             s=box_text,
-             transform=ax.transAxes,
-             bbox={'boxstyle': 'square', 'fc': 'w'})
-    plt.show()
+    plt.plot(p, crossing_prob_rect, '-o', label='Rectangular percolation')
+    plt.plot(p, crossing_prob_hex, '-x', label='Hexagonal percolation')
+    ax.legend()
+    ax.set_title(f"{nsim} simulations on a {w} x {h} grid", fontsize=10)
 
 
 if __name__ == '__main__':
 
-    # percorect = PercolationRect(20, 10, 0.5)
-    # percorect.compute_clusters()
-    # # print(percorect)
-    # percorect.plot_clusters()
+    percorect = PercolationRect(20, 10, 0.5)
+    percorect.compute_clusters()
+    # print(percorect)
+    percorect.plot_clusters()
 
     percohex = PercolationHex(20, 20, 0.5)
     percohex.compute_clusters()
@@ -350,5 +354,6 @@ if __name__ == '__main__':
     # print('is_crossed:', percohex.is_crossed())
     percohex.plot_clusters(add_cluster_id=False)
 
-    # Compute 
-    percolation_vs_p(40, 40, nsim=50)
+    # Compute percolation probabilities
+    percolation_vs_p(20, 20, nsim=50)
+    plt.show()
