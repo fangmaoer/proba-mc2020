@@ -5,7 +5,7 @@ import matplotlib.animation as animation
 from math import sqrt, pi
 
 # Fixing random state for reproducibility
-np.random.seed(19680801)
+#np.random.seed(19680801)
 
 # four possible directions
 directions = ((0, 1),   # North
@@ -136,8 +136,52 @@ def plot_distance(nwalk: int = 1000):
             label=f'Average over {nwalk} samples')
     ax.legend()
 
+    # sample n random bernoulli numbers P(1)=p
+def sample_cointossing(n: int, p: float) -> np.ndarray:
+    x=np.zeros(n)
+    for i in range(n):
+        x[i] = 2*np.random.binomial(1,p,1)-1
+    return x
 
-if __name__ == '__main__':
+# simulate random walk with n step and probability of +1 is p, start at x0, return the sample, number of visit to x0, max distance
+def simu_rw_z(n,p,x0):
+    z = sample_cointossing(n,p)
+    x=np.empty(n+1)
+    x[0]=x0
+    x[1:]=x0 + np.cumsum(z)
+    # count number of visit of x0
+    i=0
+    for l in range(n):
+        if x[l] == x0:
+            i += 1
+    # record the max distance
+    j=0
+    for l in range(n):
+        m = np.abs(x0-x[l])
+        if m > j:
+            j = m
+    return x,i,j
+
+# head and tail game, return true if A wins, A bet on head, with probability p he wins 1 penny, A start with a pennies and B start with b pennies
+def head_tail_game(a,b,p):
+    x = b
+    while x >0 and x < a+b:
+        x += 2*np.random.binomial(1,p,None)-1
+    return x == 0
+
+# empirical proba that A wins, theoretical value is (1-(p/(1-p))^b)/ (1-(p/(1-p))^(a+b)) if p != 1/2 and a/(a+b) if p=1/2
+def empirical_winrate_A(a,b,p,n):
+    win = 0
+    for i in range(n):
+        if head_tail_game(a,b,p):
+            win += 1
+    return win/n
+
+# does not seems to work very well..
+print(empirical_winrate_A(3,5,1/3,10000))
+
+#if __name__ == '__main__':
     # anim = generate_animation(100)
-    plot_distance(500)
-    plt.show()
+#    plot_distance(500)
+#    plt.show()
+
