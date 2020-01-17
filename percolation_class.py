@@ -1,7 +1,8 @@
 """simulate Percolations on different graphs"""
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.patches import RegularPolygon
+from matplotlib.patches import RegularPolygon, Patch
+from matplotlib.lines import Line2D
 from math import sqrt, pi
 
 # Fixing random state for reproducibility
@@ -19,16 +20,23 @@ from math import sqrt, pi
 class PercolationRect:
 
     grid_type = 'rectangular'
+    largest_cluster_color = 'r'
+    other_clusters_color = 'b'
 
-    def __init__(self, w: int, h: int, p: float):
+    def __init__(self, w: int, h: int):
         self.w = w
         self.h = h
-        self.p = p
-        self.sample = self._simu_perco()
+        self.p = None
+        self.rand_array = self._get_rand_array()
+        self.sample = None
         self.cluster = None
-        self.title = f'Percolation on a {self.grid_type} {(w, h)}-grid'
+        self.suptitle = f'Percolation on a {self.grid_type} grid'
 
-    def _simu_perco(self) -> np.ndarray:
+    def _get_rand_array(self):
+        """Return a 2d random array"""
+        return np.random.random((self.w + 1, self.h + 1, 2))
+
+    def _get_sample(self, p: float) -> np.ndarray:
         """
         This function will give a percolation sample in a rectangle
         of height h, width w, parameter p,
@@ -41,10 +49,9 @@ class PercolationRect:
         Order the vertical edges by (i,j,1); i=1..w+1; j=1..h,
         same coordinate as the horizontals.
         """
-        return np.where(np.random.random((self.w + 1, self.h + 1, 2)) < self.p,
-                        0, 1)
+        return np.where(self.rand_array < p, 0, 1)
 
-    def compute_clusters(self):
+    def compute_clusters(self, p: float):
         """
         Compute the clusters of a percolation sample x of width w
         and height h, on the square lattice,
@@ -57,6 +64,8 @@ class PercolationRect:
         """
         w = self.w
         h = self.h
+        self.p = p
+        self.sample = self._get_sample(p)
         self.cluster = np.zeros((w + 1, h + 1), dtype=int)
         visited = np.full((w + 1, h + 1), False)
         k = 0  # cluster index
@@ -127,17 +136,23 @@ class PercolationRect:
         ax.set_xlabel('$x$')
         ax.set_ylabel('$y$')
         ax.set_aspect('equal', 'datalim')  # x and y scales are equal
-        fig.suptitle(self.title)
+        fig.suptitle(self.suptitle)
         ax.grid(show_grid)
         return ax
 
-    @staticmethod
-    def add_text(ax, text, color='r'):
-        """Add text to figure"""
-        plt.text(0.8, 1.,
-                 s=text,
-                 transform=ax.transAxes,
-                 bbox={'boxstyle': 'square', 'ec': color, 'fc': 'w'})
+    def set_title(self, ax):
+        """Set ax title"""
+        ax.set_title(f'{self.w} x {self.h}-grid, $p = {self.p}$', fontsize=10)
+
+    def set_legend(self, ax, largest_cluster_size):
+        """Set figure legend"""
+        handles = []
+        handles.append(Line2D([0], [0], color=self.largest_cluster_color,
+                              label='largest cluster '
+                                    f'({largest_cluster_size} cells)'))
+        handles.append(Line2D([0], [0], color=self.other_clusters_color,
+                              label='other clusters'))
+        ax.legend(handles=handles)
 
     def plot_clusters(self):
         """Plot clusters using matplotlib"""
@@ -153,14 +168,21 @@ class PercolationRect:
 
         for i in range(w + 1):
             for j in range(h + 1):
-                color = 'r' if self.cluster[i, j] == largest_cluster else 'b'
+                if self.cluster[i, j] == largest_cluster:
+                    color = self.largest_cluster_color
+                else:
+                    color = self.other_clusters_color
                 # Plot horizontal edge
                 if i <= w - 1 and self.sample[i, j, 0] == 1:
-                    ax.plot([i * dx, (i + 1) * dx], [j * dx, j * dx], color)
+                    ax.plot([i * dx, (i + 1) * dx], [j * dx, j * dx],
+                            color=color)
                 # Plot vertical edge
                 if j <= h - 1 and self.sample[i, j, 1] == 1:
-                    ax.plot([i * dx, i * dx], [j * dx, (j + 1) * dx], color)
-        self.add_text(ax, f'{largest_cluster_size}-vertex cluster')
+                    ax.plot([i * dx, i * dx], [j * dx, (j + 1) * dx],
+                            color=color)
+
+        self.set_title(ax)
+        self.set_legend(ax, largest_cluster_size)
 
     def __repr__(self):
         """Return a string be output with print(self)"""
@@ -177,6 +199,11 @@ class PercolationRect:
                                              self.cluster[-1])
         return np.in1d(left_boundary_clusters, right_boundary_clusters).any()
 
+    def plot(self, p: int):
+        """Compute percolation for a given p and plot it"""
+        self.compute_clusters(p)
+        self.plot_clusters()
+
 
 class PercolationHex(PercolationRect):
     """
@@ -186,16 +213,14 @@ class PercolationHex(PercolationRect):
     """
 
     grid_type = 'hexagonal'
+    largest_cluster_color = 'lightcoral'
+    other_clusters_color = 'sandybrown'
 
-    def _simu_perco(self) -> np.ndarray:
-        """
-        This function will give a percolation sample in a hexagonal rectangle
-        of height h, width w, parameter p, the output is a array X[(w,h)]
-        where X[i,j] is the sample uniform number at the cell (i,j).
-        """
-        return np.where(np.random.random((self.w, self.h)) < self.p, 0, 1)
+    def _get_rand_array(self):
+        """Return a 2d random array"""
+        return np.random.random((self.w, self.h))
 
-    def compute_clusters(self):
+    def compute_clusters(self, p: float):
         """
         compute the clusters of a percolation sample x of width w
         and height h, on the hexagonal lattice,
@@ -206,6 +231,8 @@ class PercolationHex(PercolationRect):
         """
         w = self.w
         h = self.h
+        self.p = p
+        self.sample = self._get_sample(p)
         self.cluster = np.zeros((w, h), dtype=int)
         x = self.sample
         visited = np.full((w, h), False)
@@ -267,6 +294,16 @@ class PercolationHex(PercolationRect):
                     visited[i-1, j+1] = True
                     stack.append([i-1, j+1])
 
+    def set_legend(self, ax, largest_cluster_size):
+        """Set figure legend"""
+        handles = []
+        handles.append(Patch(color=self.largest_cluster_color,
+                             label='largest cluster '
+                                   f'({largest_cluster_size} cells)'))
+        handles.append(Patch(color=self.other_clusters_color,
+                             label='other clusters'))
+        ax.legend(handles=handles)
+
     def plot_clusters(self, add_cluster_id=False):
         """Plot clusters using matplotlib"""
         w = self.w
@@ -277,12 +314,12 @@ class PercolationHex(PercolationRect):
         for i in range(w):
             for j in range(h):
                 if self.sample[i, j] == 0:
-                    color = 'lightblue'
+                    color = 'white'
                 else:
                     if self.cluster[i, j] == largest_cluster:
-                        color = 'lightcoral'
+                        color = self.largest_cluster_color
                     else:
-                        color = 'sandybrown'
+                        color = self.other_clusters_color
                 # Polygon coordinates
                 x = (i * 3**0.5 / 2)
                 y = (i / 2 + j)
@@ -294,8 +331,8 @@ class PercolationHex(PercolationRect):
                 if add_cluster_id:
                     ax.text(x, y, self.cluster[i, j], ha='center', va='center')
 
-        self.add_text(ax, f'{largest_cluster_size}-cell cluster',
-                      color='lightcoral')
+        self.set_title(ax)
+        self.set_legend(ax, largest_cluster_size)
         ax.autoscale()
 
 
@@ -310,8 +347,8 @@ def percolation_vs_p(w: int, h: int, nsim=40, n_p=40):
         """Return a probability of crossing"""
         sum = 0
         for i in range(nsim):
-            perco = Percolation(w, h, p)
-            perco.compute_clusters()
+            perco = Percolation(w, h)
+            perco.compute_clusters(p)
             if perco.is_crossed():
                 sum += 1
         return sum / nsim
@@ -343,13 +380,13 @@ def percolation_vs_p(w: int, h: int, nsim=40, n_p=40):
 
 if __name__ == '__main__':
 
-    percorect = PercolationRect(20, 10, 0.5)
-    percorect.compute_clusters()
+    percorect = PercolationRect(20, 10)
+    percorect.compute_clusters(p=0.5)
     # print(percorect)
     percorect.plot_clusters()
 
-    percohex = PercolationHex(20, 20, 0.5)
-    percohex.compute_clusters()
+    percohex = PercolationHex(20, 20)
+    percohex.compute_clusters(p=0.5)
     # print(percohex)
     # print('is_crossed:', percohex.is_crossed())
     percohex.plot_clusters(add_cluster_id=False)
