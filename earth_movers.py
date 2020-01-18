@@ -51,15 +51,7 @@ class EarthMovers:
         """Return a 1D-array of the distances"""
         if self.T is None:
             self.compute_ot()
-        d = np.zeros((self.n, ))
-        mx = self.T.max()
-        k = 0
-        for i in range(self.n):
-            for j in range(self.n):
-                if self.T[i, j] / mx > 1e-8:
-                    d[k] = self.M[i, j]
-                    k += 1
-        return d
+        return np.extract(self.T / self.T.max() > 1e-8, self.M)
 
     def create_figure(self, suptitle: str):
         """Create empty figure"""
