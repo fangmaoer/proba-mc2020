@@ -17,6 +17,9 @@ class EarthMovers:
         # target position
         self.xt = np.random.random_sample((self.n, self.n))
         self.M = self._compute_loss_matrix()
+        # sample are uniform
+        self.a = []
+        self.b = []
 
     def _compute_loss_matrix(self):
         """Return loss matrix"""
@@ -24,9 +27,16 @@ class EarthMovers:
         M /= M.max()
         return M
 
+    def get_ot_matrix(self):
+        """Return optimal transport matrix"""
+        return ot.emd(self.a, self.b, self.M)
+
     def get_wasserstein_distance(self) -> float:
         """Return Wasserstein_distance"""
-        return ot.emd2(a=[], b=[], M=self.M)
+        return ot.emd2(self.a, self.b, self.M)
+
+    #def get_distances(self):
+
 
     def create_figure(self, suptitle: str):
         """Create empty figure"""
@@ -44,12 +54,12 @@ class EarthMovers:
         ax = self.create_figure(suptitle='Source and target distributions')
 
         # using a uniform distribution on samples
-        G = ot.emd(a=[], b=[], M=self.M)
+        G = self.get_ot_matrix()
 
         # inspired by plot2D_samples_mat()
         mx = G.max()
-        for i in range(xs.shape[0]):
-            for j in range(xt.shape[0]):
+        for i in range(self.n):
+            for j in range(self.n):
                 if G[i, j] / mx > 1e-8:
                     ax.plot([xs[i, 0], xt[j, 0]], [xs[i, 1], xt[j, 1]],
                             alpha=G[i, j] / mx, c=[.5, .5, 1])
@@ -57,11 +67,14 @@ class EarthMovers:
         ax.plot(xs[:, 0], xs[:, 1], 'ob', label='Source samples')
         ax.plot(xt[:, 0], xt[:, 1], 'or', label='Target samples')
         ax.legend(loc=0)
-        wd = em.get_wasserstein_distance()
+        wd = self.get_wasserstein_distance()
         ax.set_title(f"Wasserstein distance: {wd:f}", fontsize=10)
 
 
 if __name__ == '__main__':
-    em = EarthMovers(50)
+    em = EarthMovers(10)
     em.plot_ot()
     plt.show()
+
+    em500 = EarthMovers(500)
+    print(f"Wasserstein distance: {em500.get_wasserstein_distance():f}")
