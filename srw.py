@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from math import sqrt, pi
+from numba import jit
 
 # Fixing random state for reproducibility
 # np.random.seed(19680801)
@@ -33,30 +34,13 @@ def generate_walk(nstep: int):
     return x, y
 
 
-def compute_distance(nstep: int):
-    """Compute distance from start to end position for a 2D random walk"""
-
-    def get_direction(i: int):
-        return directions[i]
-
-    vget_direction = np.vectorize(get_direction)
-
-    # random array of direction indices
-    dir_arr = np.random.randint(4, size=nstep)
-    xsteps, ysteps = vget_direction(dir_arr)
-    # Accumulate steps in each direction
-    x = np.sum(xsteps)
-    y = np.sum(ysteps)
-    return sqrt(x**2 + y**2)
-
-
-def create_1Dfigure():
-    """Return a figure and plot area for a nstep-walk"""
+def create_1Dfigure(title):
+    """Return a 1D figure and plot area"""
     # Create figure and plot area
     fig, ax = plt.subplots()
     ax.set_xlabel('$n$')
     ax.set_ylabel('$d$')
-    ax.set_title('Distance as function of number of steps $n$')
+    ax.set_title(title)
     return fig, ax
 
 
@@ -116,34 +100,97 @@ def plot_walk(nstep: int):
     ax.plot(x[-1], y[-1], 'o')
 
 
-def compute_average_distance(nwalk: int, nstep: int):
-    """Compute average distance over nwalk repetitions of nstep-walks"""
-    vget_compute_distance = np.vectorize(compute_distance)
-    return np.sum(vget_compute_distance(np.full(nwalk, nstep))) / nwalk
+class Distance:
+    """Abstract class that should not be instantiated"""
 
+    title = ''
 
-def plot_distance(nwalk: int = 1000):
-    """
-    Plot mean distance from starting point as function of number of steps
-    """
+    def __init__(self, nwalk):
+        self.nwalk = nwalk
 
-    def compute_distances(nwalk: int):
+    def compute_average(self, nstep: int):
+        """Compute average of func over nwalk repetitions of nstep-walks"""
+        vfunc = np.vectorize(self.compute_distance)
+        return np.sum(vfunc(np.full(self.nwalk, nstep))) / self.nwalk
+
+    @staticmethod
+    def compute_distance(nstep: int) -> float:
+        pass
+
+    def plot(self):
         """
-        return a mean over nwalk samples of the distance for various nsteps
+        Plot mean distance from starting point as function of number of steps
         """
-        dist = np.empty_like(nsteps, dtype=float)
-        for i, nstep in np.ndenumerate(nsteps):
-            dist[i] = compute_average_distance(nwalk, nstep)
-        return dist
+    
+        def compute_distances():
+            """
+            return a mean over nwalk samples of the distance for various nsteps
+            """
+            dist = np.empty_like(nsteps, dtype=float)
+            for i, nstep in np.ndenumerate(nsteps):
+                dist[i] = self.compute_average(nstep)
+            return dist
 
-    nsteps = np.arange(1, 1000, 100)
-    distances = compute_distances(nwalk)
+        nsteps = np.arange(1, 1000, 100)
+        distances = compute_distances()
 
-    fig, ax = create_1Dfigure()
+        fig, ax = create_1Dfigure(self.title)
 
-    ax.plot(nsteps, np.sqrt(2 * nsteps / pi), label=r'$\sqrt{\frac{2n}{\pi}}$')
-    ax.plot(nsteps, distances, 'o', label=f'Average over {nwalk} samples')
-    ax.legend()
+        ax.plot(nsteps, np.sqrt(2 * nsteps / pi), label=r'$\sqrt{\frac{2n}{\pi}}$')
+        ax.plot(nsteps, distances, 'o', label=f'Average over {self.nwalk} samples')
+        ax.legend()
+
+
+class FinalDistance(Distance):
+
+    title = 'Distance as a function of number of steps $n$'
+
+    @staticmethod
+    def compute_distance(nstep: int):
+        """Compute distance from start to end position for a 2D random walk"""
+
+        def get_direction(i: int):
+            """Return direction tuple from index"""
+            return directions[i]
+
+        vget_direction = np.vectorize(get_direction)
+
+        # random array of direction indices
+        dir_arr = np.random.randint(4, size=nstep)
+        xsteps, ysteps = vget_direction(dir_arr)
+        # Accumulate steps in each direction
+        x = np.sum(xsteps)
+        y = np.sum(ysteps)
+    
+        return sqrt(x**2 + y**2)
+
+
+@jit(nopython=True)
+def compute_max_distance(nstep: int):
+    """Compute max reached distance for a 2D random walk"""
+
+    # initial position
+    x = 0
+    y = 0
+    max_distance = 0.
+
+    # time loop
+    for step in range(1, nstep):
+        direction = directions[np.random.randint(4)]
+        x += direction[0]
+        y += direction[1]
+        max_distance = max(max_distance, sqrt(x**2 + y**2))
+
+    return max_distance
+
+
+class MaxDistance(Distance):
+
+    title = 'Maximum distance as a function of number of steps $n$'
+
+    @staticmethod
+    def compute_distance(nstep: int):
+        return compute_max_distance(nstep)
 
 
 def sample_cointossing(n: int, p: float) -> np.ndarray:
@@ -210,5 +257,7 @@ def empirical_winrate_A(a, b, p, n):
 
 if __name__ == '__main__':
     anim = generate_animation(100)
-    plot_distance(1000)
+
+    FinalDistance(1000).plot()
+    MaxDistance(1000).plot()
     plt.show()
