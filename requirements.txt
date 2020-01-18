@@ -6,3 +6,5 @@ ipywidgets
 seaborn
 sklearn
 numba
+cython
+POT
