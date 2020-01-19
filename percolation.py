@@ -49,7 +49,7 @@ class PercolationRect:
         Order the vertical edges by (i,j,1); i=1..w+1; j=1..h,
         same coordinate as the horizontals.
         """
-        return np.where(self.rand_array < p, 0, 1)
+        return np.where(self.rand_array > p, 0, 1)
 
     def compute_clusters(self, p: float):
         """
