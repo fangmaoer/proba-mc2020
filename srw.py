@@ -39,7 +39,7 @@ class Walk2D:
             y[step] = y[step - 1] + direction[1]
         return x, y
 
-    def init_figure(self):
+    def _init_figure(self):
         """Return a figure and plot area"""
         # Create figure and plot area
         fig, ax = plt.subplots()
@@ -66,7 +66,7 @@ class Walk2D:
             spot.set_data(x[step], y[step])
 
         # create figure and plot area
-        fig, ax = self.init_figure()
+        fig, ax = self._init_figure()
 
         # plot a continuous line for walk path
         path, = ax.plot(x, y)
@@ -88,7 +88,7 @@ class Walk2D:
         """Plot walk in a figure"""
         x = self.x
         y = self.y
-        fig, ax = self.init_figure()
+        fig, ax = self._init_figure()
 
         path, = ax.plot(x, y)  # a line for path
 
@@ -103,49 +103,66 @@ def plot_walk(nstep: int):
     walk.plot()
 
 
-class Distance:
-    """Abstract class that should not be instantiated"""
+class NWalk:
+    """
+    Abstract class for a n-walk computation
+    (should not be instantiated)
+    """
 
+    suptitle = ''
     title = ''
 
     def __init__(self, nwalk):
         self.nwalk = nwalk
 
-    def compute_average(self, nstep: int):
-        """Compute average of func over nwalk repetitions of nstep-walks"""
-        vfunc = np.vectorize(self.compute_distance)
-        return np.sum(vfunc(np.full(self.nwalk, nstep))) / self.nwalk
-
     @staticmethod
-    def compute_distance(nstep: int) -> float:
+    def compute_step(nstep: int):
         pass
 
-    def init_figure(self):
+    def compute_average(self, nstep: int):
+        """Compute average of func over nwalk repetitions of nstep-walks"""
+        vfunc = np.vectorize(self.compute_step)
+        return np.sum(vfunc(np.full(self.nwalk, nstep))) / self.nwalk
+
+    def compute_steps(self, nsteps: np.ndarray) -> np.ndarray:
+        """
+        return a mean over nwalk samples of the distance for various nsteps
+        """
+        result = np.empty_like(nsteps, dtype=float)
+        for i, nstep in np.ndenumerate(nsteps):
+            result[i] = self.compute_average(nstep)
+        return result
+
+    def _init_figure(self, ylabel='$d$'):
         """Return a 1D figure and plot area"""
         # Create figure and plot area
         fig, ax = plt.subplots()
         ax.set_xlabel('$n$')
-        ax.set_ylabel('$d$')
+        ax.set_ylabel(ylabel)
+        if self.suptitle:
+            fig.suptitle(self.suptitle)
         ax.set_title(self.title)
         return fig, ax
+
+    def plot(self):
+        pass
+
+
+class Distance(NWalk):
+    """
+    Abstract class for computin distance as function of nstep
+    (should not be instantiated)
+    """
 
     def plot(self):
         """
         Plot mean distance from starting point as function of number of steps
         """
-        def compute_distances():
-            """
-            return a mean over nwalk samples of the distance for various nsteps
-            """
-            dist = np.empty_like(nsteps, dtype=float)
-            for i, nstep in np.ndenumerate(nsteps):
-                dist[i] = self.compute_average(nstep)
-            return dist
 
         nsteps = np.arange(1, 1000, 100)
-        distances = compute_distances()
+        distances = self.compute_steps(nsteps)
 
-        fig, ax = self.init_figure()
+        fig, ax = self._init_figure()
 
         ax.plot(nsteps, np.sqrt(2 * nsteps / pi),
                 label=r'$\sqrt{\frac{2n}{\pi}}$')
@@ -155,14 +172,15 @@ class Distance:
 
 
 class FinalDistance(Distance):
+    """A class to plot final distance as function of nstep"""
 
     title = 'Distance as a function of number of steps $n$'
 
     @staticmethod
-    def compute_distance(nstep: int):
+    def compute_step(nstep: int) -> np.ndarray:
         """Compute distance from start to end position for a 2D random walk"""
 
-        def get_direction(i: int):
+        def get_direction(i: int) -> tuple:
             """Return direction tuple from index"""
             return directions[i]
 
@@ -178,32 +196,71 @@ class FinalDistance(Distance):
         return sqrt(x**2 + y**2)
 
 
-@jit(nopython=True)
-def compute_max_distance(nstep: int):
-    """Compute max reached distance for a 2D random walk"""
-
-    # initial position
-    x = 0
-    y = 0
-    max_distance = 0.
-
-    # time loop
-    for step in range(1, nstep):
-        direction = directions[np.random.randint(4)]
-        x += direction[0]
-        y += direction[1]
-        max_distance = max(max_distance, sqrt(x**2 + y**2))
-
-    return max_distance
-
-
 class MaxDistance(Distance):
+    """A class to plot maximum distance as function of nstep"""
 
     title = 'Maximum distance as a function of number of steps $n$'
 
     @staticmethod
-    def compute_distance(nstep: int):
-        return compute_max_distance(nstep)
+    @jit(nopython=True)
+    def compute_step(nstep: int):
+        """Compute max reached distance for a 2D random walk"""
+
+        # initial position
+        x = 0
+        y = 0
+        max_distance = 0.
+
+        # time loop
+        for step in range(1, nstep):
+            direction = directions[np.random.randint(4)]
+            x += direction[0]
+            y += direction[1]
+            max_distance = max(max_distance, sqrt(x**2 + y**2))
+
+        return max_distance
+
+
+class BackToStart(NWalk):
+    """
+    A class to plot the number times when the walk go back to starting point
+    """
+
+    suptitle = 'Number of return to starting point'
+    title = 'as a function of number of steps $n$'
+
+    @staticmethod
+    @jit(nopython=True)
+    def compute_step(nstep: int):
+        """Compute the number of return to start for a 2D random walk"""
+
+        x = 0
+        y = 0
+        ntimes = 0.
+
+        # time loop
+        for step in range(1, nstep):
+            direction = directions[np.random.randint(4)]
+            x += direction[0]
+            y += direction[1]
+            if x == 0 and y == 0:
+                ntimes += 1
+
+        return ntimes
+
+    def plot(self):
+        """
+        Plot mean distance from starting point as function of number of steps
+        """
+
+        nsteps = np.arange(1, 1000, 100)
+        ntimes = self.compute_steps(nsteps)
+
+        fig, ax = self._init_figure(ylabel='Number of times')
+
+        ax.plot(nsteps, ntimes, 'o',
+                label=f'Average over {self.nwalk} samples')
+        ax.legend()
 
 
 def sample_cointossing(n: int, p: float) -> np.ndarray:
@@ -275,4 +332,5 @@ if __name__ == '__main__':
 
     FinalDistance(1000).plot()
     MaxDistance(1000).plot()
+    BackToStart(10000).plot()
     plt.show()
