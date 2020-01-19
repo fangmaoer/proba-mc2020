@@ -258,6 +258,8 @@ class BackToStart(NWalk):
 
         fig, ax = self._init_figure(ylabel='Number of times')
 
+        ax.plot(self.nsteps, np.log(self.nsteps)*3/10,
+                label=r'$\frac{10}{3}\log(n)$')
         ax.plot(self.nsteps, ntimes, 'o',
                 label=f'Average over {self.nwalk} samples')
         ax.legend()
@@ -326,11 +328,11 @@ def empirical_winrate_A(a, b, p, n):
 
 
 if __name__ == '__main__':
-    walk = Walk2D(100)
-    anim = walk.generate_animation()
-    walk.plot()
+    # walk = Walk2D(100)
+    # anim = walk.generate_animation()
+    # walk.plot()
 
-    FinalDistance(nwalk=1000).plot()
-    MaxDistance(nwalk=1000).plot()
-    BackToStart(nwalk=10000, nstepmax=5000).plot()
+    # FinalDistance(nwalk=1000).plot()
+    # MaxDistance(nwalk=1000).plot()
+    BackToStart(nwalk=10000, nstepmax=10000).plot()
     plt.show()
