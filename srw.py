@@ -259,7 +259,7 @@ class BackToStart(NWalk):
         fig, ax = self._init_figure(ylabel='Number of times')
 
         ax.plot(self.nsteps, np.log(self.nsteps)*3/10,
-                label=r'$\frac{10}{3}\log(n)$')
+                label=r'$\frac{10}{3}\ln(n)$')
         ax.plot(self.nsteps, ntimes, 'o',
                 label=f'Average over {self.nwalk} samples')
         ax.legend()
