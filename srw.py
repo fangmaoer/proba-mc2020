@@ -112,10 +112,18 @@ class NWalk:
     suptitle = ''
     title = ''
 
-    def __init__(self, nwalk, nstepmax=1000):
+    def __init__(self, nwalk: int, nstepmax=1000, step_num=10):
+        """
+        nwalk: number of random walks for averaging
+        nstepmax: maximum final step
+        num_step: number of nsteps to compute and plot
+        """ 
         self.nwalk = nwalk
-        self.nsteps = np.linspace(1, nstepmax, num=10, endpoint=True,
+        self.nsteps = np.linspace(1, nstepmax, num=step_num, endpoint=True,
                                   dtype=int)
+        # abscissa values for analytical formula
+        self.x_ana = np.linspace(self.nsteps[0], self.nsteps[-1], num=100,
+                                 endpoint=True)
 
     @staticmethod
     def compute_step(nstep: int):
@@ -165,7 +173,7 @@ class Distance(NWalk):
 
         fig, ax = self._init_figure()
 
-        ax.plot(self.nsteps, np.sqrt(2 * self.nsteps / pi),
+        ax.plot(self.x_ana, np.sqrt(2 * self.x_ana / pi),
                 label=r'$\sqrt{\frac{2n}{\pi}}$')
         ax.plot(self.nsteps, distances, 'o',
                 label=f'Average over {self.nwalk} samples')
@@ -258,7 +266,7 @@ class BackToStart(NWalk):
 
         fig, ax = self._init_figure(ylabel='Number of times')
 
-        ax.plot(self.nsteps, np.log(self.nsteps)*3/10,
+        ax.plot(self.x_ana, np.log(self.x_ana)*3/10,
                 label=r'$\frac{10}{3}\ln(n)$')
         ax.plot(self.nsteps, ntimes, 'o',
                 label=f'Average over {self.nwalk} samples')
@@ -328,11 +336,12 @@ def empirical_winrate_A(a, b, p, n):
 
 
 if __name__ == '__main__':
-    # walk = Walk2D(100)
-    # anim = walk.generate_animation()
-    # walk.plot()
+    walk = Walk2D(100)
+    anim = walk.generate_animation()
+    walk.plot()
 
-    # FinalDistance(nwalk=1000).plot()
-    # MaxDistance(nwalk=1000).plot()
+    FinalDistance(nwalk=1000).plot()
+    MaxDistance(nwalk=1000).plot()
     BackToStart(nwalk=10000, nstepmax=10000).plot()
+
     plt.show()
