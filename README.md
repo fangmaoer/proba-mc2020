@@ -40,4 +40,4 @@ Run python script (once virtualenv is activated):
 python srw.py
 ```
 
-Test within a Jupyter notebook using [![Binder](https://static.mybinder.org/badge_logo.svg)](https://mybinder.org/v2/git/https%3A%2F%2Fgitlab.math.unistra.fr%2Fproba-mc2020%2Fproba-mc2020/master?filepath=mc2020.ipynb)
+Test within a Jupyter notebook using [![Binder](https://static.mybinder.org/badge_logo.svg)](https://mybinder.org/v2/git/https%3A%2F%2Fgitlab.math.unistra.fr%2Fproba-mc2020%2Fproba-mc2020/master)
