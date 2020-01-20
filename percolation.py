@@ -336,6 +336,119 @@ class PercolationHex(PercolationRect):
         ax.autoscale()
 
 
+class PercolationRectDual(PercolationRect):
+    """A class to plot the percolation graph and its dual"""
+
+    grid_type = 'rectangular'
+
+    def __init__(self, n: int):
+        self.n = n
+        self.p = None
+        self.rand_array = self._get_rand_array()
+        self.suptitle = f'Percolation on a {self.grid_type} grid'
+        self.ax = self.create_figure()
+        self.handles = []
+
+    def _get_rand_array(self):
+        """Return a 2d random array"""
+        rand_array = np.random.random((self.n, self.n, 2))
+        rand_array[0, :, 1] = 0.
+        rand_array[-1, :, 1] = 0.
+        return rand_array
+
+    def plot_graph(self, p, graph_type='direct'):
+        """Plot graph using matplotlib"""
+        n = self.n
+        self.sample = self._get_sample(p)
+        self.ax.set_title(f'{self.n} x {self.n - 1}-grid, $p = {p}$',
+                          fontsize=10)
+
+        if graph_type == 'direct':
+            DirectGraph(self).plot()
+        elif graph_type == 'dual':
+            DualGraph(self).plot()
+        elif graph_type == 'both':
+            DirectGraph(self).plot()
+            DualGraph(self).plot()
+
+        self.ax.legend(handles=self.handles)
+
+
+class Graph:
+    """An abstract class to plot a graph"""
+
+    color = ''
+    legend = ''
+
+    def __init__(self, percolation):
+        self.n = percolation.n
+        self.ax = percolation.ax
+        self.sample = percolation.sample
+        self.handles = percolation.handles
+        self.dx = 1. / self.n
+
+    def plot(self):
+        """plot all edges"""
+        for i in range(self.n):
+            for j in range(self.n):
+                self.plot_ij(i, j)
+        self.set_legend()
+
+    def plot_ij(self, i: int, j: int):
+        pass
+
+    def plot_edge(self, x0, x1, y0, y1):
+        """plot a single edge"""
+        self.ax.plot([x0, x1], [y0, y1], '-o', color=self.color)
+
+    def set_legend(self):
+        """Set figure legend"""
+        self.handles.append(Line2D([0], [0], color=self.color,
+                            label=self.legend))
+
+
+class DirectGraph(Graph):
+    """A class to plot a direct graph"""
+
+    color = 'b'
+    legend = 'Direct graph'
+
+    def plot_ij(self, i: int, j: int):
+        n = self.n
+        dx = self.dx
+        # Plot horizontal edge
+        if self.sample[i, j, 0] == 1:
+            x0, x1 = i * dx, (i + 1) * dx
+            y0, y1 = j * dx, j * dx
+            self.plot_edge(x0, x1, y0, y1)
+        # Plot vertical edge
+        if i > 0 and j < n - 1 and self.sample[i, j, 1] == 1:
+            x0, x1 = i * dx, i * dx
+            y0, y1 = j * dx, (j + 1) * dx
+            self.plot_edge(x0, x1, y0, y1)
+
+
+class DualGraph(Graph):
+    """A class to plot a dual graph"""
+
+    color = 'r'
+    legend = 'Dual graph'
+
+    def plot_ij(self, i: int, j: int):
+        n = self.n
+        dx = self.dx
+        # Plot vertical edge
+        if self.sample[i, j, 0] == 1:
+            x0, x1 = (i + 0.5) * dx, (i + 0.5) * dx
+            y0, y1 = (j - 0.5) * dx, (j + 0.5) * dx
+            self.plot_edge(x0, x1, y0, y1)
+        # Plot horizontal edge
+        if i > 0 and j < n - 1 and self.sample[i, j, 1] == 1:
+            x0, x1 = (i - 0.5) * dx, (i + 0.5) * dx
+            y0, y1 = (j + 0.5) * dx, (j + 0.5) * dx
+            self.plot_edge(x0, x1, y0, y1)
+
+
 def percolation_vs_p(w: int, h: int, nsim=40, n_p=40):
     """
     Plot the probability of crossing as a function of p
@@ -393,4 +506,8 @@ if __name__ == '__main__':
 
     # Compute percolation probabilities
     percolation_vs_p(20, 20, nsim=50)
+
+    percorectdual = PercolationRectDual(5)
+    percorectdual.plot_graph(p=0.5, graph_type='both')
+
     plt.show()
