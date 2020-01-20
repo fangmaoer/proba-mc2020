@@ -1,4 +1,6 @@
-# A random walk visualization
+# A set of Jupyter notebooks as part of the [Master Class in Probability 2020](http://irma.math.unistra.fr/stochastique/mc2020/)
+
+**Authors:** Matthieu Boileau, Sébastien Martineau, Marielle Simon, Dario Trevisan, Xiaolin Zeng
 
 ## Installation
 
