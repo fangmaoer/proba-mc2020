@@ -346,7 +346,7 @@ class PercolationRectDual(PercolationRect):
         self.p = None
         self.rand_array = self._get_rand_array()
         self.suptitle = f'Percolation on a {self.grid_type} grid'
-        self.ax = self.create_figure()
+        self.ax = None
         self.handles = []
 
     def _get_rand_array(self):
@@ -359,7 +359,9 @@ class PercolationRectDual(PercolationRect):
     def plot_graph(self, p, graph_type='initial'):
         """Plot graph using matplotlib"""
         n = self.n
+        self.handles = []  # Reinitialize legend handles
         self.sample = self._get_sample(p)
+        self.ax = self.create_figure()
         self.ax.set_title(f'{self.n} x {self.n - 1}-grid, $p = {p}$',
                           fontsize=10)
 
