@@ -356,19 +356,19 @@ class PercolationRectDual(PercolationRect):
         rand_array[-1, :, 1] = 0.
         return rand_array
 
-    def plot_graph(self, p, graph_type='direct'):
+    def plot_graph(self, p, graph_type='initial'):
         """Plot graph using matplotlib"""
         n = self.n
         self.sample = self._get_sample(p)
         self.ax.set_title(f'{self.n} x {self.n - 1}-grid, $p = {p}$',
                           fontsize=10)
 
-        if graph_type == 'direct':
-            DirectGraph(self).plot()
+        if graph_type == 'initial':
+            InitialGraph(self).plot()
         elif graph_type == 'dual':
             DualGraph(self).plot()
         elif graph_type == 'both':
-            DirectGraph(self).plot()
+            InitialGraph(self).plot()
             DualGraph(self).plot()
 
         self.ax.legend(handles=self.handles)
@@ -407,11 +407,11 @@ class Graph:
                             label=self.legend))
 
 
-class DirectGraph(Graph):
-    """A class to plot a direct graph"""
+class InitialGraph(Graph):
+    """A class to plot an initial graph"""
 
     color = 'b'
-    legend = 'Direct graph'
+    legend = 'Initial graph'
 
     def plot_ij(self, i: int, j: int):
         n = self.n
