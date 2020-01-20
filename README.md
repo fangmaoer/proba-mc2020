@@ -20,7 +20,7 @@ Create virtual environment:
 virtualenv .env
 ```
 
-Activate virtual env:
+Activate virtualenv:
 
 ```bash
 source .env/bin/activate
@@ -34,10 +34,28 @@ pip install -r requirements.txt
 
 ## Usage
 
-Run python script (once virtualenv is activated):
+### Activate virtualenv
+
+From project root directory, run:
+
+```bash
+source .env/bin/activate
+```
+
+### Run within Jupyter notebooks
+
+From project root directory, run:
+
+```bash
+jupyter-notebook
+```
+
+### Launch python scripts from command line
 
 ```bash
 python srw.py
 ```
 
-Test within a Jupyter notebook using [![Binder](https://static.mybinder.org/badge_logo.svg)](https://mybinder.org/v2/git/https%3A%2F%2Fgitlab.math.unistra.fr%2Fproba-mc2020%2Fproba-mc2020/master)
+## Test with Binder
+
+[![Binder](https://static.mybinder.org/badge_logo.svg)](https://mybinder.org/v2/git/https%3A%2F%2Fgitlab.math.unistra.fr%2Fproba-mc2020%2Fproba-mc2020/master)
