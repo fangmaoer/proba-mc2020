@@ -122,8 +122,8 @@ class NWalk:
         self.nsteps = np.linspace(1, nstepmax, num=step_num, endpoint=True,
                                   dtype=int)
         # abscissa values for analytical formula
-        self.x_ana = np.linspace(self.nsteps[0], self.nsteps[-1], num=100,
-                                 endpoint=True)
+        self.x_ana = np.linspace(1, nstepmax, num=100, endpoint=True,
+                                 dtype=int)
 
     @staticmethod
     def compute_step(nstep: int):
@@ -151,7 +151,9 @@ class NWalk:
         ax.set_ylabel(ylabel)
         if self.suptitle:
             fig.suptitle(self.suptitle)
-        ax.set_title(self.title)
+            ax.set_title(self.title, fontsize=10)
+        else:
+            ax.set_title(self.title)
         return fig, ax
 
     def plot(self):
@@ -236,7 +238,17 @@ class BackToStart(NWalk):
     """
 
     suptitle = 'Number of return to starting point'
-    title = 'as a function of number of steps $n$'
+    title = 'as a function of the number of steps $n$'
+
+    def __init__(self, nwalk: int, nstepmax=1000, step_num=10):
+        """
+        nwalk: number of random walks for averaging
+        nstepmax: maximum final step
+        num_step: number of nsteps to compute and plot
+        """
+        self.nwalk = nwalk
+        self.nsteps = np.logspace(2, np.log10(nstepmax), num=step_num, endpoint=True,
+                                  dtype=int)
 
     @staticmethod
     @jit(nopython=True)
@@ -265,11 +277,9 @@ class BackToStart(NWalk):
         ntimes = self.compute_steps()
 
         fig, ax = self._init_figure(ylabel='Number of times')
-
-        ax.plot(self.x_ana, np.log(self.x_ana)*3/10,
-                label=r'$\frac{10}{3}\ln(n)$')
         ax.plot(self.nsteps, ntimes, 'o',
                 label=f'Average over {self.nwalk} samples')
+        ax.set_xscale('log')
         ax.legend()
 
 
@@ -342,6 +352,6 @@ if __name__ == '__main__':
 
     FinalDistance(nwalk=1000).plot()
     MaxDistance(nwalk=1000).plot()
-    BackToStart(nwalk=10000, nstepmax=10000).plot()
+    BackToStart(nwalk=10000, nstepmax=10000, step_num=8).plot()
 
     plt.show()
