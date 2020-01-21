@@ -2,6 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+from matplotlib.collections import LineCollection
 from math import sqrt, pi
 from numba import jit
 
@@ -82,23 +83,49 @@ class Walk2D:
 
         return anim
 
-    def plot(self):
+    def plot(self, colorize=True):
         """Plot walk in a figure"""
         x = self.x
         y = self.y
         fig, ax = self._init_figure()
 
-        path, = ax.plot(x, y)  # a line for path
+        if colorize:
+            t = np.arange(1, x.shape[0] + 1)  # time variable
+
+            # set up an array of (x,y) points
+            points = np.array([x, y]).transpose().reshape(-1, 1, 2)
+
+            # set up a list of segments
+            segs = np.concatenate([points[:-1], points[1:]], axis=1)
+
+            # make the collection of segments
+            cmap = plt.get_cmap('jet')
+            lc = LineCollection(segs, cmap=cmap, alpha=0.5)
+            lc.set_array(t)  # color the segments by the time parameter
+
+            # plot the collection
+            ax.add_collection(lc)
+            # line collections donnot auto-scale the plot
+            ax.set_xlim(x.min(), x.max())
+            ax.set_ylim(y.min(), y.max())
+
+            fig.colorbar(lc)
+            start_color = cmap(t[0])
+            end_color = cmap(t[-2] * 256 / t.shape[0])
+        else:
+            path, = ax.plot(x, y)  # a line for path
+            start_color = 'C1'  # blue
+            end_color = 'C2'  # orange
 
         # symbols for initial (squared) and final (round) position
-        ax.plot(x[0], y[0], 's', color=path.get_color())
-        ax.plot(x[-1], y[-1], 'o')
-
-
-def plot_walk(nstep: int):
-    """plot a nstep-2D walk"""
-    walk = Walk2D(nstep)
-    walk.plot()
+        ax.plot(x[0], y[0], 's', ms=10,
+                markerfacecolor='white',
+                markeredgecolor=start_color,
+                markeredgewidth=3)
+        ax.plot(x[-1], y[-1], 'o', ms=10,
+                markerfacecolor='white',
+                markeredgecolor=end_color,
+                markeredgewidth=3)
 
 
 class NWalk:
