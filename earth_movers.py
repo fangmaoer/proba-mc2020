@@ -9,6 +9,8 @@ import ot
 
 class EarthMovers2D:
 
+    dimension = '2D'
+
     def __init__(self, n: int):
         self.n = n  # number of samples
         self.p = None
@@ -93,10 +95,13 @@ class EarthMovers2D:
         plt.hist(distances, bins=bins)
         ax.set_xlabel("Distance")
         ax.set_ylabel("Number of matchings")
-        ax.set_title(f"Histogram of distance ($p = {self.p}$)")
+        fig.suptitle("Histogram of distance", fontsize=14)
+        ax.set_title(f"{self.dimension} - $p = {self.p}$")
 
 
 class EarthMovers1D(EarthMovers2D):
+
+    dimension = '1D'
 
     def _set_positions(self):
         # source and target positions
