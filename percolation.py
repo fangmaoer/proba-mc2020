@@ -18,11 +18,11 @@ import progressbar
 # x[i,j,0],  the up one (i,j)--(i,j+1) is recorded in x[i,j,1].
 
 
-class PercolationRect:
+class Percolation:
 
-    grid_type = 'rectangular'
-    largest_cluster_color = 'r'
-    other_clusters_color = 'b'
+    grid_type = ''
+    largest_cluster_color = ''
+    other_clusters_color = ''
 
     def __init__(self, w: int, h: int):
         self.w = w
@@ -35,7 +35,7 @@ class PercolationRect:
 
     def _get_rand_array(self):
         """Return a 2d random array"""
-        return np.random.random((self.w + 1, self.h + 1, 2))
+        pass
 
     def _get_sample(self, p: float) -> np.ndarray:
         """
@@ -51,6 +51,97 @@ class PercolationRect:
         same coordinate as the horizontals.
         """
         return np.where(self.rand_array > p, 0, 1)
+
+    def compute_clusters(self, p: float):
+        """
+        Compute the clusters of a percolation sample x of width w
+        and height h
+        """
+        pass
+
+    def get_largest_cluster(self) -> tuple:
+        """Return index and size of largest cluster"""
+        flat_cluster = self.cluster.reshape(-1)
+        true_clusters = np.extract(flat_cluster > 0, flat_cluster)
+        counts = np.bincount(true_clusters)
+        largest = np.argmax(counts)
+        size = counts[largest]
+        return largest, size
+
+    def create_figure(self, show_grid=True):
+        """Create empty figure"""
+        fig, ax = plt.subplots()
+        ax.set_xlabel('$x$')
+        ax.set_ylabel('$y$')
+        ax.set_aspect('equal', 'datalim')  # x and y scales are equal
+        fig.suptitle(self.suptitle)
+        ax.grid(show_grid)
+        return ax
+
+    def set_title(self, ax):
+        """Set ax title"""
+        ax.set_title(f'{self.w} x {self.h}-grid, $p = {self.p}$', fontsize=10)
+
+    def set_legend(self, ax, largest_cluster_size):
+        """Set figure legend"""
+        pass
+
+    def plot_clusters(self):
+        """Plot clusters using matplotlib"""
+        pass
+
+    def __repr__(self):
+        """Return a string be output with print(self)"""
+        s = f'sample:\n{self.sample}\n'
+        s += f'cluster:\n{self.cluster}\n'
+        s += f'largest_cluster:\n{self.get_largest_cluster()}'
+        return s
+
+    def is_crossed(self):
+        """Return True if percolation crosses from left to right boundary"""
+        left_boundary_clusters = np.extract(self.cluster[0] > 0,
+                                            self.cluster[0])
+        right_boundary_clusters = np.extract(self.cluster[-1] > 0,
+                                             self.cluster[-1])
+        return np.in1d(left_boundary_clusters, right_boundary_clusters).any()
+
+    def find_p_cross(self):
+        """
+        Find minimum p value that produces a crossing
+        Use a simple dichotomy algorithm
+        """
+
+        # initial values
+        a = 0.
+        b = 1.
+        err = 1.
+
+        while err > 1e-3:
+            p = 0.5 * (a + b)
+            self.compute_clusters(p)
+            if self.is_crossed():
+                b = p
+            else:
+                a = p
+            err = abs(a - b)
+
+        return p
+
+    def plot(self, p: int):
+        """Compute percolation for a given p and plot it"""
+        self.compute_clusters(p)
+        self.plot_clusters()
+
+
+class PercolationRect(Percolation):
+
+    grid_type = 'rectangular'
+    largest_cluster_color = 'r'
+    other_clusters_color = 'b'
+
+    def _get_rand_array(self):
+        """Return a 2d random array"""
+        return np.random.random((self.w + 1, self.h + 1, 2))
 
     def compute_clusters(self, p: float):
         """
@@ -122,29 +213,6 @@ class PercolationRect:
                     visited[i, j - 1] = True
                     stack.append([i, j - 1])
 
-    def get_largest_cluster(self) -> tuple:
-        """Return index and size of largest cluster"""
-        flat_cluster = self.cluster.reshape(-1)
-        true_clusters = np.extract(flat_cluster > 0, flat_cluster)
-        counts = np.bincount(true_clusters)
-        largest = np.argmax(counts)
-        size = counts[largest]
-        return largest, size
-
-    def create_figure(self, show_grid=True):
-        """Create empty figure"""
-        fig, ax = plt.subplots()
-        ax.set_xlabel('$x$')
-        ax.set_ylabel('$y$')
-        ax.set_aspect('equal', 'datalim')  # x and y scales are equal
-        fig.suptitle(self.suptitle)
-        ax.grid(show_grid)
-        return ax
-
-    def set_title(self, ax):
-        """Set ax title"""
-        ax.set_title(f'{self.w} x {self.h}-grid, $p = {self.p}$', fontsize=10)
-
     def set_legend(self, ax, largest_cluster_size):
         """Set figure legend"""
         handles = []
@@ -185,50 +253,8 @@ class PercolationRect:
         self.set_title(ax)
         self.set_legend(ax, largest_cluster_size)
 
-    def __repr__(self):
-        """Return a string be output with print(self)"""
-        s = f'sample:\n{self.sample}\n'
-        s += f'cluster:\n{self.cluster}\n'
-        s += f'largest_cluster:\n{self.get_largest_cluster()}'
-        return s
 
-    def is_crossed(self):
-        """Return True if percolation crosses from left to right boundary"""
-        left_boundary_clusters = np.extract(self.cluster[0] > 0,
-                                            self.cluster[0])
-        right_boundary_clusters = np.extract(self.cluster[-1] > 0,
-                                             self.cluster[-1])
-        return np.in1d(left_boundary_clusters, right_boundary_clusters).any()
-
-    def find_p_cross(self):
-        """
-        Find minimum p value that produces a crossing
-        Use a simple dichotomy algorithm
-        """
-
-        # initial values
-        a = 0.
-        b = 1.
-        err = 1.
-
-        while err > 1e-3:
-            p = 0.5 * (a + b)
-            self.compute_clusters(p)
-            if self.is_crossed():
-                b = p
-            else:
-                a = p
-            err = abs(a - b)
-
-        return p
-
-    def plot(self, p: int):
-        """Compute percolation for a given p and plot it"""
-        self.compute_clusters(p)
-        self.plot_clusters()
-
-
-class PercolationHex(PercolationRect):
+class PercolationHex(Percolation):
     """
     The hexagonal lattice, percolation by cells, we take a w times h hexagonal
     lattice, label the hexagonal cells by its center, counts from left bottom,
@@ -463,12 +489,12 @@ class DualGraph(Graph):
         n = self.n
         dx = self.dx
         # Plot vertical edge
-        if self.sample[i, j, 0] == 1:
+        if self.sample[i, j, 0] == 0:
             x0, x1 = (i + 0.5) * dx, (i + 0.5) * dx
             y0, y1 = (j - 0.5) * dx, (j + 0.5) * dx
             self.plot_edge(x0, x1, y0, y1)
         # Plot horizontal edge
-        if i > 0 and j < n - 1 and self.sample[i, j, 1] == 1:
+        if i > 0 and j < n - 1 and self.sample[i, j, 1] == 0:
             x0, x1 = (i - 0.5) * dx, (i + 0.5) * dx
             y0, y1 = (j + 0.5) * dx, (j + 0.5) * dx
             self.plot_edge(x0, x1, y0, y1)
