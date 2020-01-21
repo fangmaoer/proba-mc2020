@@ -8,3 +8,4 @@ sklearn
 numba
 cython
 POT
+progressbar2

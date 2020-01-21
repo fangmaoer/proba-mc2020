@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import RegularPolygon, Patch
 from matplotlib.lines import Line2D
 from math import sqrt, pi
+import progressbar
 
 # Fixing random state for reproducibility
 # np.random.seed(19680801)
@@ -198,6 +199,28 @@ class PercolationRect:
         right_boundary_clusters = np.extract(self.cluster[-1] > 0,
                                              self.cluster[-1])
         return np.in1d(left_boundary_clusters, right_boundary_clusters).any()
+
+    def find_p_cross(self):
+        """
+        Find minimum p value that produces a crossing
+        Use a simple dichotomy algorithm
+        """
+
+        # initial values
+        a = 0.
+        b = 1.
+        err = 1.
+
+        while err > 1e-3:
+            p = 0.5 * (a + b)
+            self.compute_clusters(p)
+            if self.is_crossed():
+                b = p
+            else:
+                a = p
+            err = abs(a - b)
+
+        return p
 
     def plot(self, p: int):
         """Compute percolation for a given p and plot it"""
@@ -451,44 +474,37 @@ class DualGraph(Graph):
             self.plot_edge(x0, x1, y0, y1)
 
 
-def percolation_vs_p(w: int, h: int, nsim=40, n_p=40):
+def percolation_vs_p(w: int, h: int, nsim=40, n_p=50):
     """
     Plot the probability of crossing as a function of p
     by running nsim simulations
     """
-    p = np.linspace(0., 1., n_p)  # 40-value array between 0 and 1
+    p_values = np.linspace(0., 1., n_p)  # n_p-value array between 0 and 1
 
-    def crossing_probability(Percolation, p: float):
-        """Return a probability of crossing"""
-        sum = 0
-        for i in range(nsim):
-            perco = Percolation(w, h)
-            perco.compute_clusters(p)
-            if perco.is_crossed():
-                sum += 1
-        return sum / nsim
+    def plot_crossing_probability(ax, Percolation) -> np.ndarray:
+        """
+        Plot crossing probabilities of a percolation of type Percolation
+        """
 
-    def get_crossing_probabilities(Percolation):
-        """
-        Return a n_p array of crossing probability for given Percolation type
-        """
         print(f"Computing crossing probabilities for {Percolation.grid_type} "
               "percolation")
-        crossing_prob = np.zeros_like(p)
-        for i in range(len(p)):
-            crossing_prob[i] = crossing_probability(Percolation, p[i])
-        return crossing_prob
+        cross_proba = np.zeros_like(p_values)
+        for i in progressbar.progressbar(range(nsim)):
+            perco = Percolation(w, h)
+            p_cross = perco.find_p_cross()
+            cross_proba += np.where(p_values < p_cross, 0, 1)
 
-    crossing_prob_rect = get_crossing_probabilities(PercolationRect)
-    crossing_prob_hex = get_crossing_probabilities(PercolationHex)
+        cross_proba /= nsim
+        ax.plot(p_values, cross_proba, '-',
+                label=f'{Percolation.grid_type} percolation')
 
     fig, ax = plt.subplots()
     fig.suptitle('Probability of crossing as a function of $p$')
     ax.set_xlabel('$p$')
     ax.set_ylabel('probability')
     ax.grid()
-    plt.plot(p, crossing_prob_rect, '-o', label='Rectangular percolation')
-    plt.plot(p, crossing_prob_hex, '-x', label='Hexagonal percolation')
+    plot_crossing_probability(ax, PercolationRect)
+    plot_crossing_probability(ax, PercolationHex)
     ax.legend()
     ax.set_title(f"{nsim} simulations on a {w} x {h} grid", fontsize=10)
 
@@ -507,7 +523,7 @@ if __name__ == '__main__':
     percohex.plot_clusters(add_cluster_id=False)
 
     # Compute percolation probabilities
-    percolation_vs_p(20, 20, nsim=50)
+    percolation_vs_p(20, 20, nsim=200, n_p=100)
 
     percorectdual = PercolationRectDual(5)
     percorectdual.plot_graph(p=0.5, graph_type='both')
