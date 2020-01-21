@@ -19,21 +19,19 @@ class Walk2D:
 
     def __init__(self, nstep: int):
         self.nstep = nstep
-        self.x, self.y = self._generate_walk()
+        self.x, self.y = self._compute_walk(self.nstep)
 
-    def _generate_walk(self):
-        """
-        Create a nstep-random walk path on Cartesian grid
-        """
-        x = np.empty(self.nstep)
-        y = np.empty(self.nstep)
+    @staticmethod
+    @jit(nopython=True)
+    def _compute_walk(nstep: int):
+        x = np.empty(nstep)
+        y = np.empty(nstep)
 
         # initial position
         x[0] = 0
         y[0] = 0
-
         # time loop
-        for step in range(1, self.nstep):
+        for step in range(1, nstep):
             direction = directions[np.random.randint(4)]
             x[step] = x[step - 1] + direction[0]
             y[step] = y[step - 1] + direction[1]
@@ -117,7 +115,7 @@ class NWalk:
         nwalk: number of random walks for averaging
         nstepmax: maximum final step
         num_step: number of nsteps to compute and plot
-        """ 
+        """
         self.nwalk = nwalk
         self.nsteps = np.linspace(1, nstepmax, num=step_num, endpoint=True,
                                   dtype=int)
@@ -247,8 +245,8 @@ class BackToStart(NWalk):
         num_step: number of nsteps to compute and plot
         """
         self.nwalk = nwalk
-        self.nsteps = np.logspace(2, np.log10(nstepmax), num=step_num, endpoint=True,
-                                  dtype=int)
+        self.nsteps = np.logspace(2, np.log10(nstepmax), num=step_num,
+                                  endpoint=True, dtype=int)
 
     @staticmethod
     @jit(nopython=True)
