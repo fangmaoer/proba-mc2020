@@ -109,7 +109,8 @@ class Walk2D:
             ax.set_xlim(x.min(), x.max())
             ax.set_ylim(y.min(), y.max())
 
-            fig.colorbar(lc)
+            cb = fig.colorbar(lc)
+            cb.ax.set_title(r"$n_{step}$")
             start_color = cmap(t[0])
             end_color = cmap(t[-2] * 256 / t.shape[0])
         else:
