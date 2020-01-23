@@ -12,5 +12,6 @@ dependencies:
   - numpy
   - POT
   - progressbar2
+  - python>=3.6
   - seaborn
   - scikit-learn
