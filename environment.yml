@@ -1,0 +1,16 @@
+name: mc2020
+channels:
+  - conda
+  - conda-forge
+dependencies:
+  - cython
+  - ffmpeg
+  - ipywidgets
+  - jupyter
+  - matplotlib
+  - numba
+  - numpy
+  - POT
+  - progressbar2
+  - seaborn
+  - scikit-learn

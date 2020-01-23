@@ -3,3 +3,6 @@
 .ipynb_checkpoints/
 __pycache__/
 custom.el
+optimal_transport.html
+percolation.html
+simple_random_walk.html

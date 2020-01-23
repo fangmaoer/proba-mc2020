@@ -4,44 +4,30 @@
 
 ## Installation
 
-### Install pip
+### Using Conda
 
-Follow the [instructions](https://pip.pypa.io/en/stable/installing/).
+#### Install Anaconda
 
-### install `virtualenv`
+Follow instructions for installing [Anaconda](https://www.anaconda.com/distribution/#download-section) for python 3.
 
-```bash
-pip install --user virtualenv
-```
-
-### Install dependencies
-
-Create virtual environment:
-
-```bash
-virtualenv .env
-```
-
-Activate virtualenv:
-
-```bash
-source .env/bin/activate
-```
-
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-## Usage
-
-### Activate virtualenv
+#### Install dependencies
 
 From project root directory, run:
 
 ```bash
-source .env/bin/activate
+conda env create -f environment.yml
+```
+
+> **Note:** the `Solving environment` step may be long, be patient...
+
+## Usage
+
+### Activate environment
+
+Before first execution, run:
+
+```bash
+conda activate mc2020
 ```
 
 ### Run within Jupyter notebooks
@@ -53,6 +39,8 @@ jupyter-notebook
 ```
 
 ### Launch python scripts from command line
+
+From project root directory, run:
 
 ```bash
 python srw.py
