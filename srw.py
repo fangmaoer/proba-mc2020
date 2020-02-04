@@ -136,7 +136,7 @@ class NWalk:
     """
 
     suptitle = ''
-    title = ''
+    title = 'as a function of the number of steps $n$'
 
     def __init__(self, nwalk: int, nstepmax=1000, step_num=10):
         """
@@ -192,6 +192,11 @@ class Distance(NWalk):
     (should not be instantiated)
     """
 
+    analytical_function = r''
+
+    def get_analytical(self):
+        pass
+
     def plot(self):
         """
         Plot mean distance from starting point as function of number of steps
@@ -201,17 +206,18 @@ class Distance(NWalk):
 
         fig, ax = self._init_figure()
 
-        ax.plot(self.x_ana, np.sqrt(2 * self.x_ana / pi),
-                label=r'$\sqrt{\frac{2n}{\pi}}$')
         ax.plot(self.nsteps, distances, 'o',
                 label=f'Average over {self.nwalk} samples')
+        ax.plot(self.x_ana, self.get_analytical(),
+                label=self.analytical_function)
         ax.legend()
 
 
 class FinalDistance(Distance):
     """A class to plot final distance as function of nstep"""
 
-    title = 'Distance as a function of number of steps $n$'
+    suptitle = 'Distance to starting point'
+    analytical_function = r'$\sqrt{\frac{2n}{\pi}}$'
 
     @staticmethod
     def compute_step(nstep: int) -> np.ndarray:
@@ -232,11 +238,15 @@ class FinalDistance(Distance):
 
         return sqrt(x**2 + y**2)
 
+    def get_analytical(self):
+        return np.sqrt(2 * self.x_ana / pi)
+
 
 class MaxDistance(Distance):
     """A class to plot maximum distance as function of nstep"""
 
-    title = 'Maximum distance as a function of number of steps $n$'
+    suptitle = 'Maximum distance'
+    analytical_function = r'$\sqrt{n}$'
 
     @staticmethod
     @jit(nopython=True)
@@ -257,6 +267,9 @@ class MaxDistance(Distance):
 
         return max_distance
 
+    def get_analytical(self):
+        return np.sqrt(self.x_ana)
+
 
 class BackToStart(NWalk):
     """
@@ -264,7 +277,6 @@ class BackToStart(NWalk):
     """
 
     suptitle = 'Number of return to starting point'
-    title = 'as a function of the number of steps $n$'
 
     def __init__(self, nwalk: int, nstepmax=1000, step_num=10):
         """
